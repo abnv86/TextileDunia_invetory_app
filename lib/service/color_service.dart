@@ -1,31 +1,56 @@
 import 'package:app/modal/color_modal.dart';
+import 'package:app/modal/product_modal.dart';
 import 'package:hive_flutter/adapters.dart';
 
-// Add a new color to Hive
 void addColor(String addColorInHive) async {
   var addColorBox = Hive.box<ColorModal>('colorBox');
-  await addColorBox.add(ColorModal(colorName: addColorInHive));
+  await addColorBox.add(ColorModal(colorName: addColorInHive.trim()));
 }
 
-// Get all colors from Hive
 List<ColorModal> getAllColor() {
   var getBox = Hive.box<ColorModal>('colorBox');
-  return getBox.values.toList();
+  return getBox.values.toList()..sort((a, b) => a.colorName.compareTo(b.colorName));
 }
 
-// Update a color in Hive
-Future<void> updateColor(int key, String updatedColorName) async {
-  var updateColorBox = Hive.box<ColorModal>('colorBox');
-  if (updateColorBox.containsKey(key)) {
-    final updatedColor = ColorModal(colorName: updatedColorName);
-    await updateColorBox.put(key, updatedColor);
+Future<void> updateColor(dynamic key, String updatedColorName) async {
+  final String trimmedColorName = updatedColorName.trim();
+  var colorBox = Hive.box<ColorModal>('colorBox');
+  var productBox = Hive.box<ProductModal>('productBox');
+
+  if (trimmedColorName.isNotEmpty && colorBox.containsKey(key)) {
+    // Get the old color name before updating
+    final oldColorName = colorBox.get(key)?.colorName;
+    
+    if (oldColorName != null && oldColorName != trimmedColorName) {
+      // Update the color
+      await colorBox.put(key, ColorModal(colorName: trimmedColorName));
+
+      // Update all products that use this color
+      await Future.forEach(productBox.keys, (dynamic productKey) async {
+        final product = productBox.get(productKey);
+        if (product != null && product.productColor == oldColorName) {
+          final updatedProduct = ProductModal(
+            itemName: product.itemName,
+            productBrandName: product.productBrandName,
+            productCategory: product.productCategory,
+            productQuantity: product.productQuantity,
+            productPurchaseRate: product.productPurchaseRate,
+            productSalesRate: product.productSalesRate,
+            productMinimumQuantity: product.productMinimumQuantity,
+            productSize: product.productSize,
+            productColor: trimmedColorName,
+            productImages: product.productImages,
+          );
+          await productBox.put(productKey, updatedProduct);
+        }
+      });
+    }
   }
 }
 
-// Delete a color from Hive
-Future<void> deleteColor(int key) async {
-  var deleteColorBox = Hive.box<ColorModal>('colorBox');
-  if (deleteColorBox.containsKey(key)) {
-    await deleteColorBox.delete(key);
+Future<void> deleteColor(dynamic key) async {
+  var colorBox = Hive.box<ColorModal>('colorBox');
+  if (colorBox.containsKey(key)) {
+    await colorBox.delete(key);
   }
 }
