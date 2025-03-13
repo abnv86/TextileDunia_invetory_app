@@ -1,41 +1,32 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'modal.dart';
+part of 'category_modal.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class ModalAdapter extends TypeAdapter<Modal> {
+class CategoryModalAdapter extends TypeAdapter<CategoryModal> {
   @override
-  final int typeId = 0;
+  final int typeId = 2;
 
   @override
-  Modal read(BinaryReader reader) {
+  CategoryModal read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Modal(
-      title: fields[0] as String,
-      description: fields[1] as String,
-      createdAt: fields[2] as DateTime,
-      completed: fields[3] as bool,
+    return CategoryModal(
+      categoryName: fields[0] as String,
     );
   }
 
   @override
-  void write(BinaryWriter writer, Modal obj) {
+  void write(BinaryWriter writer, CategoryModal obj) {
     writer
-      ..writeByte(4)
-      ..writeByte(0)
-      ..write(obj.title)
       ..writeByte(1)
-      ..write(obj.description)
-      ..writeByte(2)
-      ..write(obj.createdAt)
-      ..writeByte(3)
-      ..write(obj.completed);
+      ..writeByte(0)
+      ..write(obj.categoryName);
   }
 
   @override
@@ -44,7 +35,7 @@ class ModalAdapter extends TypeAdapter<Modal> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ModalAdapter &&
+      other is CategoryModalAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
