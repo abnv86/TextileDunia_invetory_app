@@ -15,8 +15,66 @@ class ProductPage extends StatefulWidget {
 
 class _ProductPageState extends State<ProductPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   late Box<ProductModal> productBox;
+  
+  // Search and filter states
+  String searchQuery = '';
+  String selectedCategory = '';
+  String selectedBrand = '';
+  String selectedColor = '';
+  String selectedSort = '';
+  bool showSortMenu = false;
+
+  // Get unique values for filters
+  List<String> getUniqueCategories(List<ProductModal> products) {
+    return products.map((p) => p.productCategory).toSet().toList()..sort();
+  }
+
+  List<String> getUniqueBrands(List<ProductModal> products) {
+    return products.map((p) => p.productBrandName).toSet().toList()..sort();
+  }
+
+  List<String> getUniqueColors(List<ProductModal> products) {
+    return products.map((p) => p.productColor).toSet().toList()..sort();
+  }
+
+  // Filter products based on search and filters
+  List<ProductModal> filterProducts(List<ProductModal> products) {
+    return products.where((product) {
+      final matchesSearch = searchQuery.isEmpty ||
+          product.itemName.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          product.productBrandName.toLowerCase().contains(searchQuery.toLowerCase());
+      
+      final matchesCategory = selectedCategory.isEmpty || 
+          product.productCategory == selectedCategory;
+      
+      final matchesBrand = selectedBrand.isEmpty || 
+          product.productBrandName == selectedBrand;
+      
+      final matchesColor = selectedColor.isEmpty || 
+          product.productColor == selectedColor;
+
+      return matchesSearch && matchesCategory && matchesBrand && matchesColor;
+    }).toList();
+  }
+
+  // Sort products
+  void sortProducts(List<ProductModal> products) {
+    switch (selectedSort) {
+      case 'price_asc':
+        products.sort((a, b) => a.productSalesRate.compareTo(b.productSalesRate));
+        break;
+      case 'price_desc':
+        products.sort((a, b) => b.productSalesRate.compareTo(a.productSalesRate));
+        break;
+      case 'name_asc':
+        products.sort((a, b) => a.itemName.compareTo(b.itemName));
+        break;
+      case 'name_desc':
+        products.sort((a, b) => b.itemName.compareTo(a.itemName));
+        break;
+    }
+  }
 
   @override
   void initState() {
@@ -32,13 +90,20 @@ class _ProductPageState extends State<ProductPage> {
       body: ValueListenableBuilder(
         valueListenable: productBox.listenable(),
         builder: (context, Box<ProductModal> box, _) {
-          final products = box.values.toList();
+          var products = box.values.toList();
+          final filteredProducts = filterProducts(products);
+          sortProducts(filteredProducts);
+          final keys = box.keys.toList();
+
+          final categories = getUniqueCategories(products);
+          final brands = getUniqueBrands(products);
+          final colors = getUniqueColors(products);
 
           return CustomScrollView(
             slivers: [
               SliverAppBar(
                 backgroundColor: Colors.transparent,
-                expandedHeight: 225,
+                expandedHeight: 280, // Increased height for filters
                 leading: IconButton(
                   onPressed: () {
                     _scaffoldKey.currentState?.openDrawer();
@@ -92,74 +157,240 @@ class _ProductPageState extends State<ProductPage> {
                           ),
                         ),
                       ),
+                      // Search Bar
                       Positioned(
                         top: 190,
                         left: 20,
                         right: 20,
-                        child: Row(
+                        child: Column(
                           children: [
-                            Expanded(
-                              child: Container(
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(
-                                      10), // Rounded corners
-                                  border: Border.all(
-                                      color:
-                                          Colors.grey.shade300), // Light border
-                                ),
-                                child: TextField(
-                                  textAlign:
-                                      TextAlign.center, // Center the text
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    prefixIcon: const Icon(Icons.search,
-                                        size: 20, color: Color(0xFF1F2F33)),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          10), // Keep the same rounded border
-                                      borderSide: BorderSide
-                                          .none, // Remove default border
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: Colors.grey.shade300),
                                     ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          10), // Keep rounded on focus
-                                      borderSide: BorderSide(
-                                          color: Colors.blue
-                                              .shade300), // Highlight on focus
+                                    child: TextField(
+                                      onChanged: (value) {
+                                        setState(() {
+                                          searchQuery = value;
+                                        });
+                                      },
+                                      decoration: InputDecoration(
+                                        filled: true,
+                                        fillColor: Colors.white,
+                                        prefixIcon: const Icon(Icons.search,
+                                            size: 20, color: Color(0xFF1F2F33)),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide:
+                                              BorderSide(color: Colors.blue.shade300),
+                                        ),
+                                        hintText: 'Search products',
+                                        hintStyle: const TextStyle(
+                                            color: Colors.grey, fontSize: 15),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(vertical: 9),
+                                      ),
                                     ),
-                                    hintText: 'Search products',
-                                    hintStyle: const TextStyle(
-                                        color: Colors.grey, fontSize: 15),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        vertical: 9), // Center vertically
                                   ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Container(
-                              height: 50,
-                              width: 50,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF3498DB),
-                                    Color(0xFF2980B9)
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
+                                const SizedBox(width: 12),
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      showSortMenu = !showSortMenu;
+                                    });
+                                  },
+                                  child: Container(
+                                    height: 50,
+                                    width: 50,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF3498DB),
+                                          Color(0xFF2980B9)
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                    child: const Icon(Icons.filter_list,
+                                        color: Colors.white),
+                                  ),
                                 ),
-                                borderRadius: BorderRadius.circular(15),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            // Filter Row
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  // Category Filter
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.grey.shade300),
+                                    ),
+                                    child: DropdownButton<String>(
+                                      value: selectedCategory.isEmpty ? null : selectedCategory,
+                                      hint: const Text('Category'),
+                                      underline: const SizedBox(),
+                                      items: [
+                                        const DropdownMenuItem(
+                                          value: '',
+                                          child: Text('All Categories'),
+                                        ),
+                                        ...categories.map((category) => DropdownMenuItem(
+                                          value: category,
+                                          child: Text(category),
+                                        )),
+                                      ],
+                                      onChanged: (value) {
+                                        setState(() {
+                                          selectedCategory = value ?? '';
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // Brand Filter
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.grey.shade300),
+                                    ),
+                                    child: DropdownButton<String>(
+                                      value: selectedBrand.isEmpty ? null : selectedBrand,
+                                      hint: const Text('Brand'),
+                                      underline: const SizedBox(),
+                                      items: [
+                                        const DropdownMenuItem(
+                                          value: '',
+                                          child: Text('All Brands'),
+                                        ),
+                                        ...brands.map((brand) => DropdownMenuItem(
+                                          value: brand,
+                                          child: Text(brand),
+                                        )),
+                                      ],
+                                      onChanged: (value) {
+                                        setState(() {
+                                          selectedBrand = value ?? '';
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // Color Filter
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.grey.shade300),
+                                    ),
+                                    child: DropdownButton<String>(
+                                      value: selectedColor.isEmpty ? null : selectedColor,
+                                      hint: const Text('Color'),
+                                      underline: const SizedBox(),
+                                      items: [
+                                        const DropdownMenuItem(
+                                          value: '',
+                                          child: Text('All Colors'),
+                                        ),
+                                        ...colors.map((color) => DropdownMenuItem(
+                                          value: color,
+                                          child: Text(color),
+                                        )),
+                                      ],
+                                      onChanged: (value) {
+                                        setState(() {
+                                          selectedColor = value ?? '';
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
-                              child: const Icon(Icons.filter_list,
-                                  color: Colors.white),
                             ),
                           ],
                         ),
                       ),
+                      // Sort Menu
+                      if (showSortMenu)
+                        Positioned(
+                          top: 190,
+                          right: 20,
+                          child: Container(
+                            width: 200,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                ListTile(
+                                  title: const Text('Price: Low to High'),
+                                  onTap: () {
+                                    setState(() {
+                                      selectedSort = 'price_asc';
+                                      showSortMenu = false;
+                                    });
+                                  },
+                                ),
+                                ListTile(
+                                  title: const Text('Price: High to Low'),
+                                  onTap: () {
+                                    setState(() {
+                                      selectedSort = 'price_desc';
+                                      showSortMenu = false;
+                                    });
+                                  },
+                                ),
+                                ListTile(
+                                  title: const Text('Name: A to Z'),
+                                  onTap: () {
+                                    setState(() {
+                                      selectedSort = 'name_asc';
+                                      showSortMenu = false;
+                                    });
+                                  },
+                                ),
+                                ListTile(
+                                  title: const Text('Name: Z to A'),
+                                  onTap: () {
+                                    setState(() {
+                                      selectedSort = 'name_desc';
+                                      showSortMenu = false;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -177,7 +408,8 @@ class _ProductPageState extends State<ProductPage> {
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      final product = products[index];
+                      final product = filteredProducts[index];
+                      final productKey = keys[products.indexOf(product)];
 
                       return Container(
                         decoration: BoxDecoration(
@@ -201,8 +433,10 @@ class _ProductPageState extends State<ProductPage> {
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (context) =>
-                                          ProductDetailPage(product: product),
+                                      builder: (context) => ProductDetailPage(
+                                        product: product,
+                                        productKey: productKey as int,
+                                      ),
                                     ),
                                   );
                                 },
@@ -212,8 +446,7 @@ class _ProductPageState extends State<ProductPage> {
                                   ),
                                   child: product.productImages.isNotEmpty
                                       ? Image.file(
-                                          File(product
-                                              .productImages[0]), // First image
+                                          File(product.productImages[0]),
                                           fit: BoxFit.cover,
                                           width: double.infinity,
                                           errorBuilder:
@@ -286,8 +519,7 @@ class _ProductPageState extends State<ProductPage> {
                         ),
                       );
                     },
-                    childCount:
-                        products.length, // Corrected to dynamically update
+                    childCount: filteredProducts.length,
                   ),
                 ),
               ),
@@ -298,4 +530,4 @@ class _ProductPageState extends State<ProductPage> {
       drawer: const CustomDrawer(),
     );
   }
-}
+} 

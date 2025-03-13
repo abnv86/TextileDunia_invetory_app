@@ -17,7 +17,7 @@ class ProductModalAdapter extends TypeAdapter<ProductModal> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return ProductModal(
-       itemName: fields[0] as String,
+      itemName: fields[0] as String,
       productBrandName: fields[1] as String,
       productCategory: fields[2] as String,
       productQuantity: fields[3] as int,
@@ -33,24 +33,26 @@ class ProductModalAdapter extends TypeAdapter<ProductModal> {
   @override
   void write(BinaryWriter writer, ProductModal obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
-      ..write(obj.productBrandName)
+      ..write(obj.itemName)
       ..writeByte(1)
-      ..write(obj.productCategory)
+      ..write(obj.productBrandName)
       ..writeByte(2)
-      ..write(obj.productQuantity)
+      ..write(obj.productCategory)
       ..writeByte(3)
-      ..write(obj.productPurchaseRate)
+      ..write(obj.productQuantity)
       ..writeByte(4)
-      ..write(obj.productSalesRate)
+      ..write(obj.productPurchaseRate)
       ..writeByte(5)
-      ..write(obj.productMinimumQuantity)
+      ..write(obj.productSalesRate)
       ..writeByte(6)
-      ..write(obj.productSize)
+      ..write(obj.productMinimumQuantity)
       ..writeByte(7)
-      ..write(obj.productColor)
+      ..write(obj.productSize)
       ..writeByte(8)
+      ..write(obj.productColor)
+      ..writeByte(9)
       ..write(obj.productImages);
   }
 

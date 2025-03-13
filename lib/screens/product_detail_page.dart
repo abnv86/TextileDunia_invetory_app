@@ -6,8 +6,13 @@ import 'package:app/modal/product_modal.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final ProductModal product;
+  final int productKey;
 
-  const ProductDetailPage({super.key, required this.product});
+  const ProductDetailPage({
+    super.key,
+     required this.product,
+     required this.productKey
+    });
 
   @override
   State<ProductDetailPage> createState() => _ProductDetailPageState();
@@ -41,15 +46,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             icon: const Icon(Icons.delete, ),
             onPressed: () => _confirmDelete(context),
           ),
-          IconButton(
-            icon: const Icon(Icons.edit, size: 20),
-            onPressed: () {
-              // Handle edit
-        Navigator.of(context).push(MaterialPageRoute(builder: (context){
-          return   ProductEditingPage();
-        }));
-            },
-          ),
+          // In the actions section of the AppBar, update the edit IconButton:
+IconButton(
+  icon: const Icon(Icons.edit, size: 20),
+  onPressed: () async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProductEditingPage(
+          product: widget.product,
+          productKey: widget.productKey, // Make sure to add productKey as a parameter to ProductDetailPage
+        ),
+      ),
+    );
+    if (result == true) {
+      // Refresh the page if product was updated
+      setState(() {});
+    }
+  },
+),
+
         ],
       ),
       body: Padding(

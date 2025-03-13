@@ -24,7 +24,7 @@ WidgetsFlutterBinding.ensureInitialized();
  Hive.registerAdapter(ProductModalAdapter());
  await Hive.openBox<ProductModal>('productBox');
 
-//  await Hive.deleteFromDisk(); // ⚠️ Deletes ALL Hive data
+ 
 
  
  
